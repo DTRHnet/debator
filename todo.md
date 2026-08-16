@@ -115,3 +115,11 @@ Scope note: this phase establishes identity and contracts only; realtime rooms a
 - [x] Add an authenticated WebSocket join test with an authoritative room snapshot.
 - [x] Add a reconnect test using `lastEventId` and verify missed event replay.
 - [x] Add heartbeat timeout cleanup coverage for presence and persisted connection state.
+
+## Multiplayer Phase 4 competitive results and leaderboards
+
+- [x] Add durable match results, player rating updates, and leaderboard query contracts.
+- [x] Add server-authoritative completed-room result finalization with idempotency and authorization.
+- [x] Add feature-gated match-result and leaderboard UI without affecting solo practice.
+- [x] Add regression coverage for finalization, rating math, authorization, ranking, and duplicate requests.
+- [ ] Run full validation, checkpoint, and push the competitive multiplayer increment.

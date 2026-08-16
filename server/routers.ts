@@ -6,6 +6,7 @@ import { debateRouter } from "./routers/debate";
 import { settingsRouter } from "./routers/settings";
 import { multiplayerRouter } from "./routers/multiplayer";
 import { multiplayerRuntimeRouter } from "./routers/multiplayerRuntime";
+import { competitiveRouter } from "./routers/competitive";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -25,6 +26,7 @@ export const appRouter = router({
   multiplayer: router({
     ...multiplayerRouter._def.procedures,
     ...multiplayerRuntimeRouter._def.procedures,
+    ...competitiveRouter._def.procedures,
   }),
 });
 

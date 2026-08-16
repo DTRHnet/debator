@@ -19,7 +19,7 @@ const requireEnabled = () => {
 export const multiplayerRouter = router({
   config: publicProcedure.query(() => ({
     enabled: ENV.multiplayerEnabled,
-    phase: "identity-and-contracts" as const,
+    phase: "competitive-results" as const,
     supportedModes: ["quick_match", "private_room"] as const,
     ruleset: {
       modes: ["quick_match", "private_room"] as const,

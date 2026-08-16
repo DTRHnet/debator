@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Clock3, LockKeyhole, Save, Users, Wifi, X } from "lucide-react";
+import { ArrowLeft, Clock3, LockKeyhole, Save, Trophy, Users, Wifi, X } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,9 @@ export default function MultiplayerPage() {
   const profile = trpc.multiplayer.profile.useQuery(undefined, { enabled: enabled && isAuthenticated });
   const saveProfile = trpc.multiplayer.saveProfile.useMutation({ onSuccess: () => profile.refetch() });
   const queueStatus = trpc.multiplayer.queueStatus.useQuery(undefined, { enabled: enabled && isAuthenticated, refetchInterval: 3000 });
+  const competitiveMe = trpc.multiplayer.me.useQuery(undefined, { enabled: enabled && isAuthenticated });
+  const leaderboardInput = useMemo(() => ({ offset: 0, limit: 10, minimumGames: 1 }), []);
+  const leaderboard = trpc.multiplayer.leaderboard.useQuery(leaderboardInput, { enabled: enabled && isAuthenticated });
   const enqueue = trpc.multiplayer.enqueue.useMutation({ onSuccess: () => queueStatus.refetch() });
   const cancelQueue = trpc.multiplayer.cancel.useMutation({ onSuccess: () => queueStatus.refetch() });
   const [matchCategory, setMatchCategory] = useState("");
@@ -93,6 +96,14 @@ export default function MultiplayerPage() {
         <Button disabled={!handle.trim() || saveProfile.isPending} onClick={() => saveProfile.mutate({ handle, isPublic, preferredCategory: preferredCategory.trim() || null })} className="mt-7 bg-[#d6ff6b] font-black text-[#08111f] hover:bg-[#e4ff9d]"><Save className="mr-2 h-4 w-4" /> {saveProfile.isPending ? "Saving…" : "Save player card"}</Button>
         {saveProfile.isSuccess && <p className="mt-3 text-sm font-bold text-emerald-300">Saved. Your identity is ready for the next multiplayer phase.</p>}
         {saveProfile.error && <p className="mt-3 text-sm font-bold text-rose-300">{saveProfile.error.message}</p>}
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-white/10 bg-white/[.04] p-6 shadow-2xl md:p-8">
+        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.24em] text-[#d6ff6b]">Competitive board</p><h2 className="mt-2 font-display text-2xl font-black text-white">Earn your place.</h2><p className="mt-2 text-sm leading-6 text-slate-400">Human-match ratings are separate from solo AI practice scores. Only public profiles with completed matches appear here.</p></div><Trophy className="h-7 w-7 text-[#d6ff6b]" /></div>
+        {competitiveMe.isLoading || leaderboard.isLoading ? <p className="mt-6 text-sm text-slate-400" role="status">Loading competitive stats…</p> : competitiveMe.error || leaderboard.error ? <p className="mt-6 text-sm font-bold text-rose-300" role="alert">Competitive stats are temporarily unavailable.</p> : <div className="mt-6 grid gap-4 md:grid-cols-[.8fr_1.2fr]">
+          <div className="rounded-2xl border border-[#d6ff6b]/20 bg-[#d6ff6b]/5 p-5"><p className="text-xs font-black uppercase tracking-wider text-[#d6ff6b]">Your rating</p><p className="mt-2 font-display text-4xl font-black text-white">{competitiveMe.data?.rating ?? 1000}</p><p className="mt-2 text-sm text-slate-400">{competitiveMe.data?.wins ?? 0}W · {competitiveMe.data?.losses ?? 0}L · {competitiveMe.data?.draws ?? 0}D · {competitiveMe.data?.gamesPlayed ?? 0} games</p></div>
+          <div className="overflow-hidden rounded-2xl border border-white/10"><div className="grid grid-cols-[3rem_1fr_auto] gap-3 border-b border-white/10 px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-500"><span>#</span><span>Player</span><span>Rating</span></div>{(leaderboard.data?.rows ?? []).map(row => <div key={row.userId} className="grid grid-cols-[3rem_1fr_auto] gap-3 border-b border-white/5 px-4 py-3 text-sm last:border-b-0"><span className="font-black text-[#d6ff6b]">{row.rank}</span><span className="truncate font-bold text-white">{row.handle}</span><span className="font-mono text-slate-300">{row.rating}</span></div>)}{!leaderboard.data?.rows.length && <p className="p-4 text-sm text-slate-400">The board will appear after the first public completed match.</p>}</div>
+        </div>}
       </section>
 
       <section className="mt-6 rounded-3xl border border-white/10 bg-white/[.04] p-6 shadow-2xl md:p-8">

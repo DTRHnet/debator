@@ -42,6 +42,13 @@ export const playerProfiles = mysqlTable("player_profiles", {
   handle: varchar("handle", { length: 24 }).notNull().unique(),
   isPublic: int("isPublic").notNull().default(1),
   preferredCategory: varchar("preferredCategory", { length: 64 }),
+  rating: int("rating").notNull().default(1000),
+  gamesPlayed: int("gamesPlayed").notNull().default(0),
+  wins: int("wins").notNull().default(0),
+  losses: int("losses").notNull().default(0),
+  draws: int("draws").notNull().default(0),
+  abandons: int("abandons").notNull().default(0),
+  peakRating: int("peakRating").notNull().default(1000),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -102,6 +109,32 @@ export const roomEvents = mysqlTable("room_events", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, table => [index("room_events_room_event_idx").on(table.roomId, table.eventId)]);
 
+export const multiplayerResults = mysqlTable("multiplayer_results", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: varchar("roomId", { length: 64 }).notNull().unique().references(() => multiplayerRooms.id, { onDelete: "cascade" }),
+  winnerSide: mysqlEnum("winnerSide", ["pro", "con", "draw", "abandoned", "server_fault"]).notNull(),
+  winningUserId: int("winningUserId").references(() => users.id, { onDelete: "set null" }),
+  finalizationKey: varchar("finalizationKey", { length: 96 }).notNull().unique(),
+  reason: varchar("reason", { length: 64 }).notNull().default("completed"),
+  aiAnalysisJson: text("aiAnalysisJson"),
+  finalizedAt: timestamp("finalizedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const playerRatingEvents = mysqlTable("player_rating_events", {
+  id: int("id").autoincrement().primaryKey(),
+  resultId: int("resultId").notNull().references(() => multiplayerResults.id, { onDelete: "cascade" }),
+  roomId: varchar("roomId", { length: 64 }).notNull().references(() => multiplayerRooms.id, { onDelete: "cascade" }),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  opponentUserId: int("opponentUserId").references(() => users.id, { onDelete: "set null" }),
+  priorRating: int("priorRating").notNull(),
+  newRating: int("newRating").notNull(),
+  delta: int("delta").notNull(),
+  outcome: mysqlEnum("outcome", ["win", "loss", "draw", "abandonment"]).notNull(),
+  idempotencyKey: varchar("idempotencyKey", { length: 128 }).notNull().unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [index("player_rating_events_user_created_idx").on(table.userId, table.createdAt)]);
+
 export const debateSessions = mysqlTable("debate_sessions", {
   id: varchar("id", { length: 64 }).primaryKey(),
   userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -120,6 +153,8 @@ export const debateSessions = mysqlTable("debate_sessions", {
 
 export type UserSettings = typeof userSettings.$inferSelect;
 export type PlayerProfile = typeof playerProfiles.$inferSelect;
+export type MultiplayerResult = typeof multiplayerResults.$inferSelect;
+export type PlayerRatingEvent = typeof playerRatingEvents.$inferSelect;
 export type InsertPlayerProfile = typeof playerProfiles.$inferInsert;
 export type MatchmakingQueueEntry = typeof matchmakingQueue.$inferSelect;
 export type MultiplayerRoom = typeof multiplayerRooms.$inferSelect;

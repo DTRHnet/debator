@@ -108,13 +108,14 @@ export const multiplayerRealtimeClientFrameSchema = z.discriminatedUnion("type",
   z.object({ type: z.literal("ping") }),
 ]);
 
-const multiplayerRoomEventTypeSchema = z.enum(["countdown", "turn_submitted", "cancelled", "abandoned"]);
+const multiplayerRoomEventTypeSchema = z.enum(["countdown", "turn_submitted", "cancelled", "abandoned", "completed"]);
 
 const multiplayerRoomEventPayloadSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("countdown"), stateVersion: z.number().int().nonnegative() }),
   z.object({ type: z.literal("turn_submitted"), stateVersion: z.number().int().nonnegative(), round: z.number().int().min(1).max(3), side: z.enum(["pro", "con"]) }),
   z.object({ type: z.literal("cancelled"), userId: z.number().int().positive(), reason: z.string().min(1).max(64) }),
   z.object({ type: z.literal("abandoned"), userId: z.number().int().positive() }),
+  z.object({ type: z.literal("completed"), resultId: z.number().int().positive() }),
 ]);
 
 export const multiplayerRealtimeRoomEventSchema = z.object({
