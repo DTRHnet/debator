@@ -25,7 +25,6 @@ export function useSpeechCapture(onUpdate: (transcript: string) => void) {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<RecognitionLike | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const transcriptRef = useRef("");
   const onUpdateRef = useRef(onUpdate);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -52,20 +51,27 @@ export function useSpeechCapture(onUpdate: (transcript: string) => void) {
     transcriptRef.current = existingTranscript;
     onUpdateRef.current(existingTranscript);
     try {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      if (recorderRef.current?.state !== "inactive") recorderRef.current?.stop();
+      recorderRef.current = null;
+      streamRef.current?.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+      await new Promise(resolve => window.setTimeout(resolve, 120));
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       if (recordingUrl) URL.revokeObjectURL(recordingUrl);
       setRecordingUrl(null);
-      chunksRef.current = [];
       if (typeof MediaRecorder !== "undefined") {
+        const chunks: Blob[] = [];
         const recorder = new MediaRecorder(stream);
         recorderRef.current = recorder;
         recorder.ondataavailable = event => {
-          if (event.data.size > 0) chunksRef.current.push(event.data);
+          if (event.data.size > 0) chunks.push(event.data);
         };
         recorder.onstop = () => {
-          if (chunksRef.current.length) {
-            const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+          if (chunks.length) {
+            const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
             const url = URL.createObjectURL(blob);
             setRecordingUrl(url);
             window.dispatchEvent(new CustomEvent("debaterush:recording", { detail: { url } }));
@@ -95,7 +101,16 @@ export function useSpeechCapture(onUpdate: (transcript: string) => void) {
         recognition.onerror = event => {
           if (event.error !== "aborted") setError("Live transcription paused. You can still type your argument below.");
         };
-        recognition.start();
+        recognition.onend = () => {
+          if (recognitionRef.current === recognition) recognitionRef.current = null;
+        };
+        try {
+          recognition.start();
+        } catch {
+          window.setTimeout(() => {
+            try { recognition.start(); } catch { setError("Live transcription is unavailable for this turn. You can still type your argument below."); }
+          }, 180);
+        }
         recognitionRef.current = recognition;
       }
       setIsCapturing(true);

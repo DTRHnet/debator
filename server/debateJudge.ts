@@ -86,7 +86,7 @@ export async function judgeDebate(input: {
   conTranscript: string;
   model: string;
 }) {
-  const request = (structured: boolean) => fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const request = (model: string, structured: boolean) => fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${input.apiKey}`,
@@ -94,7 +94,7 @@ export async function judgeDebate(input: {
       "X-OpenRouter-Title": "DebateRush",
     },
     body: JSON.stringify({
-      model: input.model,
+      model,
       temperature: 0.3,
       messages: [
         { role: "system", content: "You are a precise, unbiased debate judge. Return only the requested valid JSON." },
@@ -107,15 +107,30 @@ export async function judgeDebate(input: {
     }),
   });
 
-  let response = await request(true);
-  if (!response.ok) response = await request(false);
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`OpenRouter evaluation failed (${response.status}): ${detail.slice(0, 240)}`);
+  const candidates = [input.model, ...FREE_MODEL_IDS.filter(model => model !== input.model)];
+  const failures: string[] = [];
+
+  for (const model of candidates) {
+    try {
+      let response = await request(model, true);
+      if (!response.ok) response = await request(model, false);
+      if (!response.ok) {
+        failures.push(`${model} (${response.status})`);
+        continue;
+      }
+
+      const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+      const content = payload.choices?.[0]?.message?.content;
+      if (!content) {
+        failures.push(`${model} (empty response)`);
+        continue;
+      }
+      return verdictSchema.parse(JSON.parse(cleanModelJson(content)));
+    } catch {
+      failures.push(`${model} (invalid verdict)`);
+    }
   }
 
-  const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-  const content = payload.choices?.[0]?.message?.content;
-  if (!content) throw new Error("OpenRouter returned no verdict content.");
-  return verdictSchema.parse(JSON.parse(cleanModelJson(content)));
+  throw new Error(`AI judging is temporarily unavailable across the selected free providers. Please retry shortly. Attempts: ${failures.join(", ")}.`);
 }
+import { FREE_MODEL_IDS } from "../shared/freeModels";

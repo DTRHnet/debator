@@ -25,3 +25,9 @@
 - [x] Guarantee at least ten unique debate motions in every selectable category.
 - [x] Add automated coverage for mobile category presentation and per-category question counts.
 - [x] Push the validated mobile category update to DTRHnet/debator.
+- [x] Fix the second-speaker text-to-speech or playback transition in the debate round flow.
+- [x] Diagnose and eliminate malformed AI verdict request payloads that trigger the reported string-pattern validation error.
+- [x] Add regression tests for consecutive speakers and valid final judging payloads.
+- [ ] Publish the repair to the hosted DebateRush app and push it to DTRHnet/debator.
+- [x] Retry alternate curated free models when the selected OpenRouter provider is temporarily rate-limited.
+- [x] Add direct regression coverage for the Pro-to-Con playback transition and legacy offline payload normalization before judging.

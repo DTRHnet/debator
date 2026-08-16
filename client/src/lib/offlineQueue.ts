@@ -1,3 +1,5 @@
+import { createDebateSessionId, isSessionId } from "./sessionId";
+
 export type QueuedDebate = {
   id: string;
   topic: string;
@@ -11,9 +13,25 @@ export type QueuedDebate = {
 
 const QUEUE_KEY = "debaterush-offline-queue";
 
+function isQueuedDebate(value: unknown): value is Omit<QueuedDebate, "id"> & { id?: unknown } {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return typeof item.topic === "string" && (item.topicSource === "random" || item.topicSource === "custom")
+    && typeof item.timerSeconds === "number" && typeof item.roundCount === "number"
+    && typeof item.proTranscript === "string" && typeof item.conTranscript === "string" && typeof item.queuedAt === "number";
+}
+
+export function normalizeOfflineQueue(value: unknown): QueuedDebate[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isQueuedDebate).map(item => ({
+    ...item,
+    id: isSessionId(item.id) ? item.id : createDebateSessionId(),
+  }));
+}
+
 export function readOfflineQueue(): QueuedDebate[] {
   try {
-    return JSON.parse(localStorage.getItem(QUEUE_KEY) ?? "[]") as QueuedDebate[];
+    return normalizeOfflineQueue(JSON.parse(localStorage.getItem(QUEUE_KEY) ?? "[]"));
   } catch {
     return [];
   }

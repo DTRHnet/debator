@@ -9,7 +9,10 @@ import CategoryPicker from "@/components/CategoryPicker";
 import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useSpeechCapture } from "@/hooks/useSpeechCapture";
+import { useTurnAnnouncer } from "@/hooks/useTurnAnnouncer";
 import { appendRecentTopic, chooseTopic, type DebateTopic } from "@/lib/topics";
+import { createDebateSessionId } from "@/lib/sessionId";
+import { advanceDebateTurn } from "@/lib/turnTransition";
 import { queueOfflineDebate, readOfflineQueue, removeQueuedDebate, type QueuedDebate } from "@/lib/offlineQueue";
 import { trpc } from "@/lib/trpc";
 import type { DebateVerdict } from "@/types/debate";
@@ -50,6 +53,7 @@ export default function Home() {
   const [resultMessage, setResultMessage] = useState("");
   const sessionIdRef = useRef<string | null>(null);
   const speech = useSpeechCapture(setTurnDraft);
+  const announcer = useTurnAnnouncer();
 
   useEffect(() => {
     if (settingsQuery.data && stage === "setup") {
@@ -108,14 +112,15 @@ export default function Home() {
 
   const startSession = () => {
     if (activeTopic.text.length < 3) { toast.error("Pick a topic or write your own first."); return; }
-    sessionIdRef.current = crypto.randomUUID();
+    sessionIdRef.current = createDebateSessionId();
     setRound(1); setSide("pro"); setRemaining(timerSeconds); setRounds([]); setTurnDraft(""); setVerdict(null); setResultMessage(""); setStage("round");
+    announcer.announce("pro", 1);
   };
 
   const evaluateOrQueue = useCallback(async (finalRounds: RoundState[]) => {
     const transcriptFor = (position: Side) => finalRounds.filter(item => item.side === position).map(item => `Round ${item.round}: ${item.transcript}`).join("\n\n");
     const payload: QueuedDebate = {
-      id: sessionIdRef.current ?? crypto.randomUUID(), topic: activeTopic.text, topicSource: activeTopic.source,
+      id: sessionIdRef.current ?? createDebateSessionId(), topic: activeTopic.text, topicSource: activeTopic.source,
       timerSeconds, roundCount, proTranscript: transcriptFor("pro"), conTranscript: transcriptFor("con"), queuedAt: Date.now(),
     };
     if (!navigator.onLine) {
@@ -146,10 +151,12 @@ export default function Home() {
     setIsTurnLive(false);
     const nextRounds = [...rounds, { round, side, transcript }];
     setRounds(nextRounds); setTurnDraft("");
-    if (side === "pro") { setSide("con"); setRemaining(timerSeconds); return; }
-    if (round < roundCount) { setRound(current => current + 1); setSide("pro"); setRemaining(timerSeconds); return; }
+    const transition = advanceDebateTurn(side, round, roundCount);
+    if (transition.kind === "next") {
+      setRound(transition.round); setSide(transition.side); setRemaining(timerSeconds); announcer.announce(transition.side, transition.round); return;
+    }
     void evaluateOrQueue(nextRounds);
-  }, [evaluateOrQueue, round, roundCount, rounds, side, speech, timerSeconds, turnDraft]);
+  }, [announcer, evaluateOrQueue, round, roundCount, rounds, side, speech, timerSeconds, turnDraft]);
 
   useEffect(() => {
     if (!isTurnLive || remaining <= 0) return;
@@ -159,7 +166,7 @@ export default function Home() {
 
   useEffect(() => { if (isTurnLive && remaining === 0) finishTurn(); }, [finishTurn, isTurnLive, remaining]);
 
-  const reset = () => { speech.stop(); setIsTurnLive(false); setRounds([]); setTurnDraft(""); setRemaining(timerSeconds); setStage("setup"); };
+  const reset = () => { speech.stop(); announcer.cancel(); setIsTurnLive(false); setRounds([]); setTurnDraft(""); setRemaining(timerSeconds); setStage("setup"); };
   const shareResult = async () => {
     const message = verdict ? `DebateRush: ${verdict.winner === "draw" ? "draw" : `${verdict.winner.toUpperCase()} wins`} on “${activeTopic.text}”. Pro ${verdict.pro.totalScore} – Con ${verdict.con.totalScore}.` : `I completed a DebateRush round: “${activeTopic.text}”.`;
     try { await navigator.clipboard.writeText(message); toast.success("Result copied to your clipboard."); } catch { toast.error("Could not copy the result."); }

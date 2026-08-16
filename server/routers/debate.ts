@@ -7,7 +7,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { DEFAULT_FREE_MODEL } from "../../shared/freeModels";
 
 const sessionInput = z.object({
-  id: z.string().uuid(),
+  id: z.string().trim().min(8).max(128),
   topic: z.string().trim().min(3).max(500),
   topicSource: z.enum(["random", "custom"]),
   timerSeconds: z.number().int().min(15).max(300),

@@ -34,7 +34,7 @@ describe("app-wide OpenRouter judging fallback", () => {
   it("uses the configured server key when the user has not saved a personal key", async () => {
     const caller = debateRouter.createCaller({ user: { id: 42 } } as never);
     const result = await caller.judge({
-      id: "2ed5d931-51f7-4a67-b645-dc0f793c3e0e",
+      id: "legacy-offline-session-20260816",
       topic: "Should public transit be free for all riders?",
       topicSource: "random",
       timerSeconds: 60,
