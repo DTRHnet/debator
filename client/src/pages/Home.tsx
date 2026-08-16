@@ -9,7 +9,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useSpeechCapture } from "@/hooks/useSpeechCapture";
 import { queueOfflineDebate, readOfflineQueue, removeQueuedDebate, type QueuedDebate } from "@/lib/offlineQueue";
-import { TOPIC_CATEGORIES, TOPICS, type DebateTopic } from "@/lib/topics";
+import { appendRecentTopic, chooseTopic, TOPIC_CATEGORIES, type DebateTopic } from "@/lib/topics";
 import { trpc } from "@/lib/trpc";
 import type { DebateVerdict } from "@/types/debate";
 import { toast } from "sonner";
@@ -19,10 +19,11 @@ type Side = "pro" | "con";
 type RoundState = { round: number; side: Side; transcript: string };
 
 const timeLabel = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+const RECENT_TOPIC_IDS_KEY = "debaterush-recent-topic-ids";
 
-function pickTopic(category: string, avoidId?: string) {
-  const pool = TOPICS.filter(item => (category === "All" || item.category === category) && item.id !== avoidId);
-  return pool[Math.floor(Math.random() * pool.length)] ?? TOPICS[0];
+function pickTopic(category: string, avoidIds: string[] | string = []) {
+  const suppliedIds = Array.isArray(avoidIds) ? avoidIds : [avoidIds];
+  return chooseTopic(category, suppliedIds);
 }
 
 function ScoreCard({ side, score }: { side: Side; score: DebateVerdict["pro"] }) {
@@ -39,6 +40,7 @@ export default function Home() {
   const [stage, setStage] = useState<Stage>("setup");
   const [category, setCategory] = useState("All");
   const [topic, setTopic] = useState<DebateTopic>(() => pickTopic("All"));
+  const [recentTopicIds, setRecentTopicIds] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
   const [useCustomTopic, setUseCustomTopic] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(60);
@@ -61,6 +63,31 @@ export default function Home() {
       setRemaining(settingsQuery.data.timerSeconds);
     }
   }, [settingsQuery.data, stage]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(RECENT_TOPIC_IDS_KEY) ?? "[]");
+      if (Array.isArray(stored)) setRecentTopicIds(stored.filter((id): id is string => typeof id === "string").slice(-8));
+    } catch {
+      setRecentTopicIds([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    setRecentTopicIds(current => {
+      const updated = appendRecentTopic(current, topic.id);
+      try { localStorage.setItem(RECENT_TOPIC_IDS_KEY, JSON.stringify(updated)); } catch { /* local rotation is optional */ }
+      return updated;
+    });
+  }, [topic.id]);
+
+  const selectTopic = useCallback((nextCategory: string) => {
+    const nextTopic = chooseTopic(nextCategory, [...recentTopicIds, topic.id]);
+    const updatedRecentIds = appendRecentTopic([...recentTopicIds, topic.id], nextTopic.id);
+    setTopic(nextTopic);
+    setRecentTopicIds(updatedRecentIds);
+    try { localStorage.setItem(RECENT_TOPIC_IDS_KEY, JSON.stringify(updatedRecentIds)); } catch { /* selection remains available */ }
+  }, [recentTopicIds, topic.id]);
 
   const activeTopic = useMemo(() => ({ text: useCustomTopic ? customTopic.trim() : topic.text, source: useCustomTopic ? "custom" as const : "random" as const }), [customTopic, topic.text, useCustomTopic]);
   const proTranscript = useMemo(() => rounds.filter(item => item.side === "pro").map(item => `Round ${item.round}: ${item.transcript}`).join("\n\n"), [rounds]);

@@ -1,0 +1,1 @@
+ALTER TABLE `user_settings` MODIFY COLUMN `preferredModel` varchar(160) NOT NULL DEFAULT 'google/gemma-4-26b-a4b-it:free';

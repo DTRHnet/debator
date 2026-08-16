@@ -30,7 +30,7 @@ export const userSettings = mysqlTable("user_settings", {
   userId: int("userId").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
   timerSeconds: int("timerSeconds").notNull().default(60),
   roundCount: int("roundCount").notNull().default(1),
-  preferredModel: varchar("preferredModel", { length: 160 }).notNull().default("google/gemma-3-27b-it:free"),
+  preferredModel: varchar("preferredModel", { length: 160 }).notNull().default("google/gemma-4-26b-a4b-it:free"),
   encryptedOpenRouterKey: text("encryptedOpenRouterKey"),
   keyLastFour: varchar("keyLastFour", { length: 4 }),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

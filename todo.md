@@ -14,3 +14,10 @@
 - [x] Add PWA application icons and strengthen app-shell caching for predictable offline startup after the first visit.
 - [x] Add explicit settings and history query-failure states, plus pressed and current-page semantics for custom controls and navigation.
 - [x] Add selected semantics to home-screen topic, category, timer, and round controls for keyboard and screen-reader users.
+- [x] Expand the debate question bank with additional balanced categories and substantially more unique motions.
+- [x] Improve random topic selection so sessions avoid recently used questions and offer a true all-category random option.
+- [x] Retrieve and present a current list of OpenRouter free models suitable for structured debate judging.
+- [x] Add an optional server-level OpenRouter key and use it as the secure default when a user has not saved a personal key.
+- [x] Test the expanded topic system and validate the enhanced AI configuration.
+- [x] Restrict the settings model list to debate-appropriate text instruction models and rank structured-output choices first.
+- [x] Add testable helpers and coverage for recent-topic exclusion, all-category random selection, and app-wide OpenRouter-key fallback.

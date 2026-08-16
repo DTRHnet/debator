@@ -4,6 +4,7 @@ import { getDebateSessions, getUserSettings, upsertDebateSession } from "../db";
 import { decryptSecret } from "../crypto";
 import { judgeDebate, verdictSchema } from "../debateJudge";
 import { protectedProcedure, router } from "../_core/trpc";
+import { DEFAULT_FREE_MODEL } from "../../shared/freeModels";
 
 const sessionInput = z.object({
   id: z.string().uuid(),
@@ -34,18 +35,19 @@ export const debateRouter = router({
 
   judge: protectedProcedure.input(sessionInput).mutation(async ({ ctx, input }) => {
     const settings = await getUserSettings(ctx.user.id);
-    if (!settings?.encryptedOpenRouterKey) {
+    const apiKey = settings?.encryptedOpenRouterKey ? decryptSecret(settings.encryptedOpenRouterKey) : process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
       await upsertDebateSession({ ...input, userId: ctx.user.id, verdict: null, status: "unavailable" });
-      return { id: input.id, status: "unavailable" as const, message: "Add an OpenRouter key in Settings to receive an AI verdict." };
+      return { id: input.id, status: "unavailable" as const, message: "AI judging is not configured yet. Add an OpenRouter key in Settings to continue." };
     }
 
     try {
       const verdict = await judgeDebate({
-        apiKey: decryptSecret(settings.encryptedOpenRouterKey),
+        apiKey,
         topic: input.topic,
         proTranscript: input.proTranscript,
         conTranscript: input.conTranscript,
-        model: settings.preferredModel,
+        model: settings?.preferredModel ?? DEFAULT_FREE_MODEL,
       });
       await upsertDebateSession({ ...input, userId: ctx.user.id, verdict, status: "complete" });
       return { id: input.id, status: "complete" as const, verdict };

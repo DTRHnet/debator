@@ -1,6 +1,6 @@
 export type DebateTopic = { id: string; category: string; text: string };
 
-export const TOPICS: DebateTopic[] = [
+const FOUNDATIONAL_TOPICS: Array<[string, string, string]> = [
   ["society", "Society", "Should social media platforms be legally liable for user content?"],
   ["society", "Society", "Is remote work better for society than office work?"],
   ["society", "Society", "Should college education be tuition-free?"],
@@ -101,6 +101,123 @@ export const TOPICS: DebateTopic[] = [
   ["playful", "Playful", "Should dessert be eaten before dinner?"],
   ["playful", "Playful", "Is it better to explore a new city alone or with friends?"],
   ["playful", "Playful", "Should every workplace allow pets?"],
-].map(([id, category, text], index) => ({ id: `${id}-${index}`, category, text }));
+];
 
-export const TOPIC_CATEGORIES = ["All", ...Array.from(new Set(TOPICS.map(topic => topic.category)))];
+const EXPANDED_TOPICS: Array<[string, string, string]> = [
+  ["law-rights", "Law & Rights", "Should jury service be paid at a professional wage?"],
+  ["law-rights", "Law & Rights", "Should governments ban non-compete clauses for most workers?"],
+  ["law-rights", "Law & Rights", "Should voting districts be drawn by independent commissions?"],
+  ["law-rights", "Law & Rights", "Should the voting age be lowered to sixteen?"],
+  ["law-rights", "Law & Rights", "Should courts allow cameras in all public trials?"],
+  ["law-rights", "Law & Rights", "Should governments require platforms to explain algorithmic decisions?"],
+  ["law-rights", "Law & Rights", "Should public schools permit students to protest during school hours?"],
+  ["law-rights", "Law & Rights", "Should copyright terms be substantially shorter?"],
+  ["law-rights", "Law & Rights", "Should governments make election day a public holiday?"],
+  ["law-rights", "Law & Rights", "Should civil disobedience receive lighter penalties when it is nonviolent?"],
+  ["global", "Global Affairs", "Should countries prioritize regional alliances over global institutions?"],
+  ["global", "Global Affairs", "Should foreign aid be tied to measurable governance reforms?"],
+  ["global", "Global Affairs", "Should countries open their labor markets more widely to migrants?"],
+  ["global", "Global Affairs", "Should wealthier nations forgive more sovereign debt owed by poorer nations?"],
+  ["global", "Global Affairs", "Should international sporting events be boycotted over human-rights concerns?"],
+  ["global", "Global Affairs", "Should countries spend more on diplomacy than on military expansion?"],
+  ["global", "Global Affairs", "Should global internet governance be controlled by national governments?"],
+  ["global", "Global Affairs", "Should countries share climate technology without patent restrictions?"],
+  ["global", "Global Affairs", "Should asylum claims be processed by international rather than national bodies?"],
+  ["global", "Global Affairs", "Should nations limit foreign ownership of critical infrastructure?"],
+  ["science", "Science", "Should governments fund basic science even when applications are uncertain?"],
+  ["science", "Science", "Should peer review be open by default?"],
+  ["science", "Science", "Should research using public funds be freely accessible to everyone?"],
+  ["science", "Science", "Should scientists communicate uncertainty more prominently in public debates?"],
+  ["science", "Science", "Should private companies be allowed to own genetic discoveries?"],
+  ["science", "Science", "Should laboratories publish negative results more often?"],
+  ["science", "Science", "Should governments prioritize space science over deep-ocean research?"],
+  ["science", "Science", "Should citizens have a direct vote on high-risk scientific projects?"],
+  ["science", "Science", "Should public agencies restrict research on technologies with clear misuse potential?"],
+  ["science", "Science", "Should scientific expertise receive more weight than public opinion in technical policy?"],
+  ["work", "Work & Leadership", "Should employers publish salary ranges for every role?"],
+  ["work", "Work & Leadership", "Should managers be elected by their teams?"],
+  ["work", "Work & Leadership", "Should all workers have a legal right to disconnect after hours?"],
+  ["work", "Work & Leadership", "Should companies hire for potential over prior experience?"],
+  ["work", "Work & Leadership", "Should employers offer paid sabbaticals after long service?"],
+  ["work", "Work & Leadership", "Should promotions require evidence of mentoring others?"],
+  ["work", "Work & Leadership", "Should job applications exclude university names to reduce bias?"],
+  ["work", "Work & Leadership", "Should most offices make remote work the default?"],
+  ["work", "Work & Leadership", "Should companies measure performance by outcomes rather than hours online?"],
+  ["work", "Work & Leadership", "Should every worker receive ownership shares in profitable companies?"],
+  ["philosophy", "Philosophy", "Is a meaningful life more important than a happy life?"],
+  ["philosophy", "Philosophy", "Should people prioritize loyalty over impartial fairness?"],
+  ["philosophy", "Philosophy", "Is personal identity preserved if every memory is copied digitally?"],
+  ["philosophy", "Philosophy", "Should intentions matter more than consequences when judging actions?"],
+  ["philosophy", "Philosophy", "Is it better to seek truth than social harmony?"],
+  ["philosophy", "Philosophy", "Should people have a moral duty to be optimistic about the future?"],
+  ["philosophy", "Philosophy", "Can an action be admirable if it is motivated by self-interest?"],
+  ["philosophy", "Philosophy", "Should people forgive others without an apology?"],
+  ["philosophy", "Philosophy", "Is equality more important than freedom?"],
+  ["philosophy", "Philosophy", "Should humanity preserve traditions even when they slow progress?"],
+  ["media", "Media & Information", "Should news outlets avoid reporting on unverified viral claims?"],
+  ["media", "Media & Information", "Should social platforms label all AI-generated political media?"],
+  ["media", "Media & Information", "Should journalists reveal anonymous sources only in exceptional cases?"],
+  ["media", "Media & Information", "Should public figures have a right to reply in articles about them?"],
+  ["media", "Media & Information", "Should search engines rank authoritative sources above popular ones?"],
+  ["media", "Media & Information", "Should news organizations separate commentary from reporting more clearly?"],
+  ["media", "Media & Information", "Should platforms pay publishers when news links are shared?"],
+  ["media", "Media & Information", "Should school curricula include media-literacy exams?"],
+  ["media", "Media & Information", "Should livestream platforms delay broadcasts to improve safety moderation?"],
+  ["media", "Media & Information", "Should online pseudonyms receive the same protections as real names?"],
+  ["cities", "Cities & Transport", "Should city centers charge private vehicles a congestion fee?"],
+  ["cities", "Cities & Transport", "Should suburbs permit more multi-family housing by default?"],
+  ["cities", "Cities & Transport", "Should cities convert one traffic lane on major roads into protected bike lanes?"],
+  ["cities", "Cities & Transport", "Should historic preservation rules yield to housing construction?"],
+  ["cities", "Cities & Transport", "Should cities offer free late-night public transport?"],
+  ["cities", "Cities & Transport", "Should local governments ban drive-through restaurants in dense neighborhoods?"],
+  ["cities", "Cities & Transport", "Should cities require new buildings to include affordable housing?"],
+  ["cities", "Cities & Transport", "Should ride-hailing companies be regulated like taxis?"],
+  ["cities", "Cities & Transport", "Should all new streets prioritize pedestrians before vehicle throughput?"],
+  ["cities", "Cities & Transport", "Should urban delivery vehicles be limited to off-peak hours?"],
+  ["sport", "Sport & Games", "Should elite athletes be allowed to use performance-enhancing technology?"],
+  ["sport", "Sport & Games", "Should youth sports place equal playing time above winning?"],
+  ["sport", "Sport & Games", "Should professional leagues use video review less often?"],
+  ["sport", "Sport & Games", "Should esports be included in major multi-sport competitions?"],
+  ["sport", "Sport & Games", "Should college athletes be allowed to transfer freely between schools?"],
+  ["sport", "Sport & Games", "Should sports teams be publicly owned by their communities?"],
+  ["sport", "Sport & Games", "Should high-risk sports require more stringent safety rules?"],
+  ["sport", "Sport & Games", "Should chess be considered a sport?"],
+  ["sport", "Sport & Games", "Should games prioritize accessibility options even when they change difficulty?"],
+  ["sport", "Sport & Games", "Should competitive games reward teamwork more than individual statistics?"],
+  ["lifestyle", "Lifestyle", "Should people rent more possessions instead of owning them?"],
+  ["lifestyle", "Lifestyle", "Should restaurants eliminate tipping in favor of higher listed prices?"],
+  ["lifestyle", "Lifestyle", "Should people take a digital-free day every week?"],
+  ["lifestyle", "Lifestyle", "Should cities regulate the number of chain restaurants in a neighborhood?"],
+  ["lifestyle", "Lifestyle", "Is it better to buy fewer expensive items than many inexpensive items?"],
+  ["lifestyle", "Lifestyle", "Should grocery stores disclose the environmental impact of food?"],
+  ["lifestyle", "Lifestyle", "Should adults learn a second language as a civic expectation?"],
+  ["lifestyle", "Lifestyle", "Should public spaces provide more quiet zones?"],
+  ["lifestyle", "Lifestyle", "Should people prioritize local food over year-round variety?"],
+  ["lifestyle", "Lifestyle", "Should cities restrict late-night food delivery services?"],
+  ["arts", "Arts & Design", "Should public art be selected by citizen vote?"],
+  ["arts", "Arts & Design", "Should architecture prioritize beauty over efficiency?"],
+  ["arts", "Arts & Design", "Should museums charge admission to support ambitious programming?"],
+  ["arts", "Arts & Design", "Should artists be allowed to train AI models on publicly visible work?"],
+  ["arts", "Arts & Design", "Should cities protect independent music venues from redevelopment?"],
+  ["arts", "Arts & Design", "Should design schools prioritize hand skills over digital tools?"],
+  ["arts", "Arts & Design", "Should public monuments be reinterpreted rather than removed?"],
+  ["arts", "Arts & Design", "Should art competitions allow anonymous entries?"],
+  ["arts", "Arts & Design", "Should fashion brands be held responsible for textile waste?"],
+  ["arts", "Arts & Design", "Should public buildings commission local artists for new projects?"],
+];
+
+export const TOPICS: DebateTopic[] = [...FOUNDATIONAL_TOPICS, ...EXPANDED_TOPICS]
+  .map(([id, category, text], index) => ({ id: `${id}-${index}`, category, text }));
+
+export const TOPIC_CATEGORIES = ["Random", "All", ...Array.from(new Set(TOPICS.map(topic => topic.category)))];
+
+export function chooseTopic(category: string, avoidIds: string[] = [], random = Math.random) {
+  const pool = TOPICS.filter(topic => category === "All" || category === "Random" || topic.category === category);
+  const freshPool = pool.filter(topic => !avoidIds.includes(topic.id));
+  const selectionPool = freshPool.length ? freshPool : pool;
+  return selectionPool[Math.floor(random() * selectionPool.length)] ?? TOPICS[0];
+}
+
+export function appendRecentTopic(recentIds: string[], topicId: string, limit = 8) {
+  return [...recentIds.filter(id => id !== topicId), topicId].slice(-limit);
+}

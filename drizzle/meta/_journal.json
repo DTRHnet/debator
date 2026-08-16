@@ -15,6 +15,13 @@
       "when": 1786893931828,
       "tag": "0001_talented_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786895507798,
+      "tag": "0002_nappy_phalanx",
+      "breakpoints": true
     }
   ]
 }
