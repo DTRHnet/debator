@@ -49,9 +49,9 @@
 
 - Branch: `multiplayer`
 - Roadmap: `docs/multiplayer-roadmap.md`
-- Final commit: `f000a3f4687c3cb9dcb96d2d984b6791f5233391`
+- Final commit: `599113525cc3ee9a759aa165fc5a71621d1903d8`
 - Remote: https://github.com/DTRHnet/debator/tree/multiplayer
-- Scope: documentation-only multiplayer planning; multiplayer runtime implementation remains future work described by the roadmap.
+- Scope: multiplayer Phase 1–3 implementation is feature-gated; solo play remains the default, with realtime transport enabled only in staging via explicit server flags.
 
 ## References
 
@@ -101,14 +101,14 @@ Scope note: this phase establishes identity and contracts only; realtime rooms a
 - [x] Add server-owned presence, heartbeat, disconnect, reconnect snapshot, and event-version contracts.
 - [x] Integrate client room synchronization with realtime events while retaining polling fallback.
 - [x] Add authorization, reconnect, heartbeat, and transport contract tests, then run the production build.
-- [ ] Checkpoint and push the realtime increment to `DTRHnet/debator`.
+- [x] Checkpoint and push the realtime increment to `DTRHnet/debator`.
 
 ## Multiplayer Phase 3 hardening follow-up
 
 - [x] Tighten realtime replay and room-event schemas with explicit event-versioned payloads.
 - [x] Prevent stale sockets from marking a player disconnected while another live socket remains.
 - [x] Add integration coverage for unauthorized upgrades, authenticated joins, replay reconnects, and heartbeat cleanup.
-- [ ] Create the realtime checkpoint, push `multiplayer`, and record commit evidence.
+- [x] Create the realtime checkpoint, push `multiplayer`, and record commit evidence.
 
 ## Multiplayer Phase 3 integration-test completion
 
