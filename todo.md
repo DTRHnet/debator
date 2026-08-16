@@ -58,3 +58,17 @@
 - [DTRHnet/debator](https://github.com/DTRHnet/debator)
 - [Manus](https://manus.im)
 - [OpenRouter documentation](https://openrouter.ai/docs)
+
+## Multiplayer Phase 1 implementation
+
+- [x] Add a server-controlled multiplayer feature flag that defaults off and preserves solo play.
+- [x] Add shared multiplayer ruleset, profile, and room-contract types with validation helpers.
+- [x] Add additive authenticated player-profile persistence and APIs.
+- [x] Add the first flagged multiplayer entry/profile experience without exposing unfinished matchmaking.
+- [ ] Add Phase 1 tests, migration verification, checkpoint, and branch push.
+
+Scope note: this phase establishes identity and contracts only; realtime rooms and matchmaking remain subsequent phases from `docs/multiplayer-roadmap.md`.
+
+- [x] Add shared multiplayer room snapshot, state, command, and event schemas for future realtime phases.
+- [x] Add config/profile loading and error states so the gated multiplayer page never shows a false disabled state while queries are unresolved.
+- [x] Add regression coverage for multiplayer configuration behavior across disabled, enabled, loading, and error states.

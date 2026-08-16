@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
-import { BookOpenText, Gauge, History, LogIn, Settings, Wifi, WifiOff } from "lucide-react";
+import { BookOpenText, Gauge, History, LogIn, Settings, Users, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { useEffect, useState } from "react";
 import RecordingTray from "./RecordingTray";
+import { trpc } from "@/lib/trpc";
 
-const links = [
+const baseLinks = [
   { href: "/", label: "Debate", icon: Gauge },
   { href: "/history", label: "History", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -15,6 +16,10 @@ const links = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, isAuthenticated } = useAuth();
+  const multiplayerConfig = trpc.multiplayer.config.useQuery();
+  const links = multiplayerConfig.data?.enabled
+    ? [...baseLinks, { href: "/multiplayer", label: "Players", icon: Users }]
+    : baseLinks;
   const [online, setOnline] = useState(() => navigator.onLine);
 
   useEffect(() => {

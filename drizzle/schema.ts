@@ -36,6 +36,16 @@ export const userSettings = mysqlTable("user_settings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const playerProfiles = mysqlTable("player_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  handle: varchar("handle", { length: 24 }).notNull().unique(),
+  isPublic: int("isPublic").notNull().default(1),
+  preferredCategory: varchar("preferredCategory", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export const debateSessions = mysqlTable("debate_sessions", {
   id: varchar("id", { length: 64 }).primaryKey(),
   userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -53,4 +63,6 @@ export const debateSessions = mysqlTable("debate_sessions", {
 }, table => [index("debate_sessions_user_created_idx").on(table.userId, table.createdAt)]);
 
 export type UserSettings = typeof userSettings.$inferSelect;
+export type PlayerProfile = typeof playerProfiles.$inferSelect;
+export type InsertPlayerProfile = typeof playerProfiles.$inferInsert;
 export type DebateSession = typeof debateSessions.$inferSelect;

@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { debateSessions, InsertUser, userSettings, users } from "../drizzle/schema";
+import { debateSessions, InsertUser, playerProfiles, userSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import type { DebateVerdict } from "./debateJudge";
 
@@ -171,4 +171,29 @@ export async function getDebateSessions(userId: number, limit: number) {
     .where(eq(debateSessions.userId, userId))
     .orderBy(desc(debateSessions.createdAt))
     .limit(limit);
+}
+
+
+export async function getPlayerProfile(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(playerProfiles).where(eq(playerProfiles.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function upsertPlayerProfile(input: {
+  userId: number;
+  handle: string;
+  isPublic: number;
+  preferredCategory: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable.");
+  await db.insert(playerProfiles).values(input).onDuplicateKeyUpdate({
+    set: {
+      handle: input.handle,
+      isPublic: input.isPublic,
+      preferredCategory: input.preferredCategory,
+    },
+  });
 }

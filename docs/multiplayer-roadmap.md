@@ -223,3 +223,9 @@ The user approved this roadmap as-is in Plan Mode. Execution begins with this do
 - Remote push: `https://github.com/DTRHnet/debator/tree/multiplayer`
 
 ## End of roadmap
+
+## Phase 1 implementation status
+
+Phase 1 is now implemented on this branch as an additive foundation. The server exposes `MULTIPLAYER_ENABLED`, which defaults to off; solo DebateRush behavior remains the default. Shared validated contracts live in `shared/multiplayer.ts`, including launch rulesets, player profiles, room states, snapshots, client commands, server events, and availability-state handling. The additive `player_profiles` table and authenticated profile helpers are implemented, and `server/routers/multiplayer.ts` exposes public configuration plus protected profile read/save procedures. The `/multiplayer` route and gated navigation are present but do not expose unfinished matchmaking while the flag is off.
+
+Phase 1 verification completed with **21 passing tests**, one intentionally skipped live OpenRouter test, and a clean TypeScript check. The migration `drizzle/0003_lumpy_crystal.sql` was reviewed and applied successfully. Realtime rooms, matching, and leaderboard runtime behavior remain Phase 2+ work and are not claimed as implemented by this document.

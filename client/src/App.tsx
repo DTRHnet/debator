@@ -9,6 +9,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import HistoryPage from "./pages/History";
 import Home from "./pages/Home";
 import SettingsPage from "./pages/Settings";
+import MultiplayerPage from "./pages/Multiplayer";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -17,6 +18,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/history"} component={HistoryPage} />
       <Route path={"/settings"} component={SettingsPage} />
+      <Route path={"/multiplayer"} component={MultiplayerPage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
