@@ -65,7 +65,7 @@
 - [x] Add shared multiplayer ruleset, profile, and room-contract types with validation helpers.
 - [x] Add additive authenticated player-profile persistence and APIs.
 - [x] Add the first flagged multiplayer entry/profile experience without exposing unfinished matchmaking.
-- [ ] Add Phase 1 tests, migration verification, checkpoint, and branch push.
+- [x] Add Phase 1 tests, migration verification, checkpoint, and branch push.
 
 Scope note: this phase establishes identity and contracts only; realtime rooms and matchmaking remain subsequent phases from `docs/multiplayer-roadmap.md`.
 
