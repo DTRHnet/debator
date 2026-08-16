@@ -28,6 +28,8 @@
 - [x] Fix the second-speaker text-to-speech or playback transition in the debate round flow.
 - [x] Diagnose and eliminate malformed AI verdict request payloads that trigger the reported string-pattern validation error.
 - [x] Add regression tests for consecutive speakers and valid final judging payloads.
-- [ ] Publish the repair to the hosted DebateRush app and push it to DTRHnet/debator.
+- [x] Publish the repair to the hosted DebateRush app and push it to DTRHnet/debator.
+- [x] Verify the repaired build is live on the DebateRush production domain.
+- [x] Exercise the hosted Pro-to-Con transition and completed judging request to verify the repair in production.
 - [x] Retry alternate curated free models when the selected OpenRouter provider is temporarily rate-limited.
 - [x] Add direct regression coverage for the Pro-to-Con playback transition and legacy offline payload normalization before judging.
