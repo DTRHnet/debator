@@ -95,3 +95,42 @@ export function getMultiplayerAvailabilityState(input: {
   if (input.hasError) return "error";
   return input.enabled ? "enabled" : "disabled";
 }
+
+
+export const multiplayerRealtimeJoinSchema = z.object({
+  type: z.literal("join"),
+  roomId: z.string().min(8).max(64),
+  lastEventId: z.number().int().nonnegative().optional(),
+});
+
+export const multiplayerRealtimeClientFrameSchema = z.discriminatedUnion("type", [
+  multiplayerRealtimeJoinSchema,
+  z.object({ type: z.literal("ping") }),
+]);
+
+const multiplayerRoomEventTypeSchema = z.enum(["countdown", "turn_submitted", "cancelled", "abandoned"]);
+
+const multiplayerRoomEventPayloadSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("countdown"), stateVersion: z.number().int().nonnegative() }),
+  z.object({ type: z.literal("turn_submitted"), stateVersion: z.number().int().nonnegative(), round: z.number().int().min(1).max(3), side: z.enum(["pro", "con"]) }),
+  z.object({ type: z.literal("cancelled"), userId: z.number().int().positive(), reason: z.string().min(1).max(64) }),
+  z.object({ type: z.literal("abandoned"), userId: z.number().int().positive() }),
+]);
+
+export const multiplayerRealtimeRoomEventSchema = z.object({
+  eventId: z.number().int().positive(),
+  type: multiplayerRoomEventTypeSchema,
+  payload: multiplayerRoomEventPayloadSchema,
+  createdAt: z.coerce.date().optional(),
+});
+
+export const multiplayerRealtimeServerFrameSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("room_snapshot"), snapshot: multiplayerRoomSnapshotSchema, events: z.array(multiplayerRealtimeRoomEventSchema), connectionToken: z.string().min(1) }),
+  z.object({ type: z.literal("presence"), userId: z.number().int().positive(), handle: z.string().min(1).max(24), connected: z.boolean() }),
+  z.object({ type: z.literal("room_event"), event: multiplayerRealtimeRoomEventSchema }),
+  z.object({ type: z.literal("pong"), at: z.number().int().nonnegative() }),
+  z.object({ type: z.literal("error"), message: z.string().min(1).max(240) }),
+]);
+
+export type MultiplayerRealtimeClientFrame = z.infer<typeof multiplayerRealtimeClientFrameSchema>;
+export type MultiplayerRealtimeServerFrame = z.infer<typeof multiplayerRealtimeServerFrameSchema>;

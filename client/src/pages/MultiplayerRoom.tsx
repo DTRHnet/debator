@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { ArrowLeft, Check, LogOut, Send, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,64 @@ export default function MultiplayerRoomPage() {
   const roomId = params?.roomId ?? "";
   const config = trpc.multiplayer.config.useQuery();
   const availability = getMultiplayerAvailabilityState({ isLoading: config.isLoading, hasError: Boolean(config.error), enabled: Boolean(config.data?.enabled) });
-  const room = trpc.multiplayer.room.useQuery({ roomId }, { enabled: Boolean(roomId) && availability === "enabled", refetchInterval: 2000 });
+  const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "reconnecting" | "fallback">("connecting");
+  const socketRef = useRef<WebSocket | null>(null);
+  const room = trpc.multiplayer.room.useQuery({ roomId }, { enabled: Boolean(roomId) && availability === "enabled", refetchInterval: realtimeStatus === "live" ? 10000 : 2000 });
   const ready = trpc.multiplayer.ready.useMutation({ onSuccess: () => room.refetch() });
   const leave = trpc.multiplayer.leaveRoom.useMutation();
   const submit = trpc.multiplayer.submitTurn.useMutation({ onSuccess: () => { setTranscript(""); room.refetch(); } });
   const [transcript, setTranscript] = useState("");
   const snapshot = room.data;
+
+  useEffect(() => {
+    if (!roomId || availability !== "enabled" || typeof window === "undefined") return;
+    let disposed = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let lastEventId = 0;
+    const connect = () => {
+      if (disposed) return;
+      setRealtimeStatus(lastEventId ? "reconnecting" : "connecting");
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const socket = new WebSocket(`${protocol}//${window.location.host}/api/multiplayer/ws`);
+      socketRef.current = socket;
+      socket.onopen = () => {
+        setRealtimeStatus("live");
+        socket.send(JSON.stringify({ type: "join", roomId, lastEventId }));
+      };
+      socket.onmessage = event => {
+        try {
+          const frame = JSON.parse(event.data) as { type: string; events?: Array<{ eventId?: number }> };
+          if (frame.type === "room_snapshot") {
+            for (const item of frame.events ?? []) if (typeof item.eventId === "number") lastEventId = Math.max(lastEventId, item.eventId);
+            void room.refetch();
+          } else if (frame.type === "room_event") {
+            const item = (frame as { event?: { eventId?: number } }).event;
+            if (typeof item?.eventId === "number") lastEventId = Math.max(lastEventId, item.eventId);
+            void room.refetch();
+          } else if (frame.type === "presence") {
+            void room.refetch();
+          }
+        } catch {
+          setRealtimeStatus("fallback");
+        }
+      };
+      socket.onerror = () => setRealtimeStatus("fallback");
+      socket.onclose = () => {
+        socketRef.current = null;
+        if (!disposed) {
+          setRealtimeStatus("reconnecting");
+          retryTimer = setTimeout(connect, 1500);
+        }
+      };
+    };
+    connect();
+    return () => {
+      disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      socketRef.current?.close();
+      socketRef.current = null;
+    };
+  }, [availability, roomId]);
 
   if (availability === "loading") return <div className="container mx-auto max-w-3xl px-4 py-20"><div className="rounded-3xl border border-white/10 bg-white/[.04] p-8 text-center text-slate-300" role="status">Loading authoritative room state…</div></div>;
   if (availability === "error") return <div className="container mx-auto max-w-3xl px-4 py-20"><div className="rounded-3xl border border-rose-400/20 bg-rose-400/10 p-8 text-center text-rose-100" role="alert">Multiplayer availability could not be checked.</div></div>;
@@ -34,7 +86,7 @@ export default function MultiplayerRoomPage() {
   return (
     <div className="container mx-auto max-w-4xl px-4 py-10 md:py-16">
       <Link href="/multiplayer" className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white"><ArrowLeft className="h-4 w-4" /> Back to multiplayer</Link>
-      <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.24em] text-[#d6ff6b]">Room {snapshot.roomId}</p><h1 className="mt-2 font-display text-4xl font-black text-white">{snapshot.topic}</h1></div><div className="flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300"><Wifi className="h-3.5 w-3.5" /> Server state: {snapshot.state}</div></div>
+      <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.24em] text-[#d6ff6b]">Room {snapshot.roomId}</p><h1 className="mt-2 font-display text-4xl font-black text-white">{snapshot.topic}</h1></div><div className="flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300"><Wifi className="h-3.5 w-3.5" /> {realtimeStatus === "live" ? "Live updates" : realtimeStatus === "reconnecting" ? "Reconnecting" : "Polling fallback"} · {snapshot.state}</div></div>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">{snapshot.players.map(player => <div key={player.userId} className="rounded-2xl border border-white/10 bg-white/[.04] p-4"><div className="flex items-center justify-between"><span className="font-bold text-white">{player.handle}</span><span className="text-xs font-black uppercase tracking-wider text-[#d6ff6b]">{player.side}</span></div><p className="mt-2 text-sm text-slate-400">{player.connected ? "Connected" : "Reconnecting"} · {player.ready ? "Ready" : "Not ready"}</p></div>)}</div>
       <section className="mt-6 rounded-3xl border border-white/10 bg-white/[.04] p-6 md:p-8">
         <p className="text-sm font-bold text-slate-300">Round {snapshot.round} · {readyCount}/{snapshot.players.length} ready</p>

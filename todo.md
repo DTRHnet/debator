@@ -94,3 +94,24 @@ Scope note: this phase establishes identity and contracts only; realtime rooms a
 - [x] Integrate durable event reconciliation into the actual room load path and test restart recovery behavior.
 - [x] Add a router-path duplicate submit test using the same idempotency key and verify no second state advance.
 - [x] Keep room UI verification explicit about the feature-flagged disabled state until an enabled test fixture is available.
+
+## Multiplayer Phase 3 realtime transport
+
+- [x] Add authenticated, feature-flagged realtime room transport with a safe connection lifecycle.
+- [x] Add server-owned presence, heartbeat, disconnect, reconnect snapshot, and event-version contracts.
+- [x] Integrate client room synchronization with realtime events while retaining polling fallback.
+- [x] Add authorization, reconnect, heartbeat, and transport contract tests, then run the production build.
+- [ ] Checkpoint and push the realtime increment to `DTRHnet/debator`.
+
+## Multiplayer Phase 3 hardening follow-up
+
+- [x] Tighten realtime replay and room-event schemas with explicit event-versioned payloads.
+- [x] Prevent stale sockets from marking a player disconnected while another live socket remains.
+- [x] Add integration coverage for unauthorized upgrades, authenticated joins, replay reconnects, and heartbeat cleanup.
+- [ ] Create the realtime checkpoint, push `multiplayer`, and record commit evidence.
+
+## Multiplayer Phase 3 integration-test completion
+
+- [x] Add an authenticated WebSocket join test with an authoritative room snapshot.
+- [x] Add a reconnect test using `lastEventId` and verify missed event replay.
+- [x] Add heartbeat timeout cleanup coverage for presence and persisted connection state.

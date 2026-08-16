@@ -5,6 +5,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { canHostCancel, getRoomForUser, enqueuePlayer, findAndClaimMatch, leaveQueue, nextRoomState, appendRoomEvent, submitTurnOnce, toRoomSnapshot } from "../multiplayerService";
 import { multiplayerRulesetSchema } from "../../shared/multiplayer";
+import { broadcastRoomEvent } from "../realtime";
 
 const enabled = () => {
   if (!ENV.multiplayerEnabled) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Multiplayer is not enabled yet." });
@@ -69,7 +70,8 @@ export const multiplayerRuntimeRouter = router({
     const transition = nextRoomState({ state: result.room.state, players: players.length, readyPlayers: players.filter((player: any) => player.ready === 1).length, activeSide: result.room.activeSide, command: "ready" });
     if (transition.state !== result.room.state) {
       await db.update((await import("../../drizzle/schema")).multiplayerRooms).set({ state: transition.state, activeSide: transition.activeSide, stateVersion: result.room.stateVersion + 1 }).where((await import("drizzle-orm")).eq((await import("../../drizzle/schema")).multiplayerRooms.id, input.roomId));
-      await appendRoomEvent(db, input.roomId, "countdown", { stateVersion: result.room.stateVersion + 1 });
+      const eventId = await appendRoomEvent(db, input.roomId, "countdown", { stateVersion: result.room.stateVersion + 1 });
+      broadcastRoomEvent(input.roomId, { eventId, type: "countdown", payload: { stateVersion: result.room.stateVersion + 1 } });
     }
     const latest = await getRoomForUser(db, input.roomId, ctx.user.id);
     return latest ? toRoomSnapshot(latest.room, latest.players) : null;
@@ -88,7 +90,8 @@ export const multiplayerRuntimeRouter = router({
     if (!submission.duplicate) {
       const transition = nextRoomState({ state: result.room.state, players: result.players.length, readyPlayers: result.players.filter((candidate: any) => candidate.ready === 1).length, activeSide: result.room.activeSide, command: "submit_turn" });
       await db.update((await import("../../drizzle/schema")).multiplayerRooms).set({ state: transition.state, activeSide: transition.activeSide, stateVersion: result.room.stateVersion + 1 }).where((await import("drizzle-orm")).eq((await import("../../drizzle/schema")).multiplayerRooms.id, input.roomId));
-      await appendRoomEvent(db, input.roomId, "turn_submitted", { stateVersion: result.room.stateVersion + 1, round: input.round, side: input.side });
+      const eventId = await appendRoomEvent(db, input.roomId, "turn_submitted", { stateVersion: result.room.stateVersion + 1, round: input.round, side: input.side });
+      broadcastRoomEvent(input.roomId, { eventId, type: "turn_submitted", payload: { stateVersion: result.room.stateVersion + 1, round: input.round, side: input.side } });
     }
     const latest = await getRoomForUser(db, input.roomId, ctx.user.id);
     return { duplicate: submission.duplicate, snapshot: latest ? toRoomSnapshot(latest.room, latest.players) : null };
@@ -103,7 +106,8 @@ export const multiplayerRuntimeRouter = router({
     if (result.room.hostUserId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "Only the room host can cancel this room." });
     if (!canHostCancel(result.room, ctx.user.id)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "This room can no longer be cancelled." });
     await db.update((await import("../../drizzle/schema")).multiplayerRooms).set({ state: "cancelled", stateVersion: result.room.stateVersion + 1 }).where((await import("drizzle-orm")).eq((await import("../../drizzle/schema")).multiplayerRooms.id, input.roomId));
-    await appendRoomEvent(db, input.roomId, "cancelled", { userId: ctx.user.id, reason: "host_cancelled" });
+    const eventId = await appendRoomEvent(db, input.roomId, "cancelled", { userId: ctx.user.id, reason: "host_cancelled" });
+    broadcastRoomEvent(input.roomId, { eventId, type: "cancelled", payload: { userId: ctx.user.id, reason: "host_cancelled" } });
     return { success: true, state: "cancelled" as const };
   }),
 
@@ -115,7 +119,8 @@ export const multiplayerRuntimeRouter = router({
     if (!result) throw new TRPCError({ code: "NOT_FOUND", message: "Room not found or access denied." });
     const transition = nextRoomState({ state: result.room.state, players: result.players.length, readyPlayers: result.players.filter((player: any) => player.ready === 1).length, activeSide: result.room.activeSide, command: "leave_room" });
     await db.update((await import("../../drizzle/schema")).multiplayerRooms).set({ state: transition.state, stateVersion: result.room.stateVersion + 1 }).where((await import("drizzle-orm")).eq((await import("../../drizzle/schema")).multiplayerRooms.id, input.roomId));
-    await appendRoomEvent(db, input.roomId, transition.state, { userId: ctx.user.id });
+    const eventId = await appendRoomEvent(db, input.roomId, transition.state, { userId: ctx.user.id });
+    broadcastRoomEvent(input.roomId, { eventId, type: transition.state, payload: { userId: ctx.user.id } });
     return { success: true, state: transition.state };
   }),
 });

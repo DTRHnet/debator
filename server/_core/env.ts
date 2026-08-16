@@ -6,6 +6,7 @@ export const ENV = {
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
   isProduction: process.env.NODE_ENV === "production",
   multiplayerEnabled: process.env.MULTIPLAYER_ENABLED === "true",
+  multiplayerRealtimeEnabled: process.env.MULTIPLAYER_REALTIME_ENABLED === "true",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
 };
