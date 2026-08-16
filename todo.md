@@ -81,7 +81,7 @@ Scope note: this phase establishes identity and contracts only; realtime rooms a
 - [x] Add protected tRPC procedures for queue and room controls behind the multiplayer flag.
 - [x] Build gated queue and room-control UI while preserving solo gameplay.
 - [x] Add regression tests for queue matching, room transitions, authorization, and idempotency.
-- [ ] Run migration review, tests, type check, production build, checkpoint, and push to `multiplayer`.
+- [x] Run migration review, tests, type check, production build, checkpoint, and push to `multiplayer`.
 
 - [x] Implement host authorization and stronger server-authoritative room lifecycle controls with durable snapshot/event replay.
 - [x] Fix room transcript editing so players can type before submit, then verify the room UI.
