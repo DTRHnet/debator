@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { debateSessions, InsertUser, userSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import type { DebateVerdict } from "./debateJudge";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -89,4 +90,85 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getUserSettings(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function upsertUserSettings(input: {
+  userId: number;
+  timerSeconds: number;
+  roundCount: number;
+  preferredModel: string;
+  encryptedOpenRouterKey: string | null;
+  keyLastFour: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable.");
+  await db.insert(userSettings).values(input).onDuplicateKeyUpdate({
+    set: {
+      timerSeconds: input.timerSeconds,
+      roundCount: input.roundCount,
+      preferredModel: input.preferredModel,
+      encryptedOpenRouterKey: input.encryptedOpenRouterKey,
+      keyLastFour: input.keyLastFour,
+    },
+  });
+}
+
+type SessionInput = {
+  id: string;
+  userId: number;
+  topic: string;
+  topicSource: "random" | "custom";
+  timerSeconds: number;
+  roundCount: number;
+  proTranscript: string;
+  conTranscript: string;
+  verdict: DebateVerdict | null;
+  status: "pending" | "unavailable" | "failed" | "complete";
+};
+
+export async function upsertDebateSession(input: SessionInput) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable.");
+  const values = {
+    id: input.id,
+    userId: input.userId,
+    topic: input.topic,
+    topicSource: input.topicSource,
+    timerSeconds: input.timerSeconds,
+    roundCount: input.roundCount,
+    proTranscript: input.proTranscript,
+    conTranscript: input.conTranscript,
+    proScore: input.verdict?.pro.totalScore ?? null,
+    conScore: input.verdict?.con.totalScore ?? null,
+    verdictJson: input.verdict ? JSON.stringify(input.verdict) : null,
+    status: input.status,
+  } as const;
+  await db.insert(debateSessions).values(values).onDuplicateKeyUpdate({
+    set: {
+      topic: values.topic,
+      topicSource: values.topicSource,
+      timerSeconds: values.timerSeconds,
+      roundCount: values.roundCount,
+      proTranscript: values.proTranscript,
+      conTranscript: values.conTranscript,
+      proScore: values.proScore,
+      conScore: values.conScore,
+      verdictJson: values.verdictJson,
+      status: values.status,
+    },
+  });
+}
+
+export async function getDebateSessions(userId: number, limit: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(debateSessions)
+    .where(eq(debateSessions.userId, userId))
+    .orderBy(desc(debateSessions.createdAt))
+    .limit(limit);
+}

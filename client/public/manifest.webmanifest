@@ -1,0 +1,18 @@
+{
+  "name": "DebateRush — Structured debate practice",
+  "short_name": "DebateRush",
+  "description": "A focused, mobile-first debate practice game with timed turns and AI judging.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#08111f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/manus-storage/debaterush-icon_00e8ab22.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

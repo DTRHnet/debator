@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { index, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,32 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+export const userSettings = mysqlTable("user_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  timerSeconds: int("timerSeconds").notNull().default(60),
+  roundCount: int("roundCount").notNull().default(1),
+  preferredModel: varchar("preferredModel", { length: 160 }).notNull().default("google/gemma-3-27b-it:free"),
+  encryptedOpenRouterKey: text("encryptedOpenRouterKey"),
+  keyLastFour: varchar("keyLastFour", { length: 4 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const debateSessions = mysqlTable("debate_sessions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  topic: text("topic").notNull(),
+  topicSource: mysqlEnum("topicSource", ["random", "custom"]).notNull(),
+  timerSeconds: int("timerSeconds").notNull(),
+  roundCount: int("roundCount").notNull(),
+  proTranscript: text("proTranscript").notNull(),
+  conTranscript: text("conTranscript").notNull(),
+  proScore: int("proScore"),
+  conScore: int("conScore"),
+  verdictJson: text("verdictJson"),
+  status: mysqlEnum("status", ["pending", "unavailable", "failed", "complete"]).notNull().default("pending"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => [index("debate_sessions_user_created_idx").on(table.userId, table.createdAt)]);
+
+export type UserSettings = typeof userSettings.$inferSelect;
+export type DebateSession = typeof debateSessions.$inferSelect;

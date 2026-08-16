@@ -2,15 +2,21 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import AppShell from "./components/AppShell";
 import ErrorBoundary from "./components/ErrorBoundary";
+import PwaRegister from "./components/PwaRegister";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import HistoryPage from "./pages/History";
 import Home from "./pages/Home";
+import SettingsPage from "./pages/Settings";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/history"} component={HistoryPage} />
+      <Route path={"/settings"} component={SettingsPage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -27,12 +33,13 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider
-        defaultTheme="light"
+        defaultTheme="dark"
         // switchable
       >
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <PwaRegister />
+          <AppShell><Router /></AppShell>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
