@@ -24,4 +24,4 @@
 - [x] Fix the mobile category selector so every category remains discoverable and easy to choose on small screens.
 - [x] Guarantee at least ten unique debate motions in every selectable category.
 - [x] Add automated coverage for mobile category presentation and per-category question counts.
-- [ ] Push the validated mobile category update to DTRHnet/debator.
+- [x] Push the validated mobile category update to DTRHnet/debator.
