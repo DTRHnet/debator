@@ -21,3 +21,7 @@
 - [x] Test the expanded topic system and validate the enhanced AI configuration.
 - [x] Restrict the settings model list to debate-appropriate text instruction models and rank structured-output choices first.
 - [x] Add testable helpers and coverage for recent-topic exclusion, all-category random selection, and app-wide OpenRouter-key fallback.
+- [x] Fix the mobile category selector so every category remains discoverable and easy to choose on small screens.
+- [x] Guarantee at least ten unique debate motions in every selectable category.
+- [x] Add automated coverage for mobile category presentation and per-category question counts.
+- [ ] Push the validated mobile category update to DTRHnet/debator.

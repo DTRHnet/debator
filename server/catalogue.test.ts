@@ -7,6 +7,9 @@ describe("DebateRush enhanced catalogue", () => {
     expect(TOPICS.length).toBeGreaterThanOrEqual(200);
     expect(new Set(TOPICS.map(topic => topic.id)).size).toBe(TOPICS.length);
     expect(TOPIC_CATEGORIES).toEqual(expect.arrayContaining(["Random", "Law & Rights", "Global Affairs", "Arts & Design"]));
+    for (const category of TOPIC_CATEGORIES.filter(category => category !== "All" && category !== "Random")) {
+      expect(TOPICS.filter(topic => topic.category === category)).toHaveLength(10);
+    }
   });
 
   it("limits selectable settings models to reviewed free structured-output choices", () => {
