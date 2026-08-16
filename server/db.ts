@@ -1,6 +1,6 @@
-import { desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { debateSessions, InsertUser, playerProfiles, userSettings, users } from "../drizzle/schema";
+import { debateSessions, InsertUser, matchmakingQueue, multiplayerRooms, playerProfiles, roomEvents, roomPlayers, roomTurns, userSettings, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import type { DebateVerdict } from "./debateJudge";
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, LockKeyhole, Save, Users, Wifi } from "lucide-react";
+import { ArrowLeft, Clock3, LockKeyhole, Save, Users, Wifi, X } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,10 @@ export default function MultiplayerPage() {
   const availability = getMultiplayerAvailabilityState({ isLoading: config.isLoading, hasError: Boolean(config.error), enabled });
   const profile = trpc.multiplayer.profile.useQuery(undefined, { enabled: enabled && isAuthenticated });
   const saveProfile = trpc.multiplayer.saveProfile.useMutation({ onSuccess: () => profile.refetch() });
+  const queueStatus = trpc.multiplayer.queueStatus.useQuery(undefined, { enabled: enabled && isAuthenticated, refetchInterval: 3000 });
+  const enqueue = trpc.multiplayer.enqueue.useMutation({ onSuccess: () => queueStatus.refetch() });
+  const cancelQueue = trpc.multiplayer.cancel.useMutation({ onSuccess: () => queueStatus.refetch() });
+  const [matchCategory, setMatchCategory] = useState("");
   const [handle, setHandle] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [preferredCategory, setPreferredCategory] = useState("");
@@ -89,6 +93,20 @@ export default function MultiplayerPage() {
         <Button disabled={!handle.trim() || saveProfile.isPending} onClick={() => saveProfile.mutate({ handle, isPublic, preferredCategory: preferredCategory.trim() || null })} className="mt-7 bg-[#d6ff6b] font-black text-[#08111f] hover:bg-[#e4ff9d]"><Save className="mr-2 h-4 w-4" /> {saveProfile.isPending ? "Saving…" : "Save player card"}</Button>
         {saveProfile.isSuccess && <p className="mt-3 text-sm font-bold text-emerald-300">Saved. Your identity is ready for the next multiplayer phase.</p>}
         {saveProfile.error && <p className="mt-3 text-sm font-bold text-rose-300">{saveProfile.error.message}</p>}
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-white/10 bg-white/[.04] p-6 shadow-2xl md:p-8">
+        <div className="flex items-start justify-between gap-4">
+          <div><p className="text-xs font-black uppercase tracking-[.24em] text-[#d6ff6b]">Quick Match</p><h2 className="mt-2 font-display text-2xl font-black text-white">Find a compatible opponent.</h2><p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">The server matches compatible rulesets, starts with a narrow rating window, and expands it gradually. This first increment prepares the queue and room handoff.</p></div>
+          <Users className="hidden h-7 w-7 text-[#d6ff6b] sm:block" />
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="space-y-2"><Label htmlFor="match-category">Category preference</Label><Input id="match-category" value={matchCategory} onChange={event => setMatchCategory(event.target.value)} maxLength={64} placeholder="Any category" className="border-white/10 bg-black/10 text-white" /></div>
+          {queueStatus.data?.status === "queued" ? <Button variant="outline" onClick={() => cancelQueue.mutate()} disabled={cancelQueue.isPending} className="border-white/15 bg-transparent text-white hover:bg-white/10"><X className="mr-2 h-4 w-4" /> {cancelQueue.isPending ? "Leaving…" : "Leave queue"}</Button> : <Button onClick={() => enqueue.mutate({ ruleset: { mode: "quick_match", topicSource: matchCategory.trim() ? "category" : "random", category: matchCategory.trim() || null, timerSeconds: 60, roundCount: 1, inputMode: "either", aiAnalysis: true }, category: matchCategory.trim() || null })} disabled={enqueue.isPending} className="bg-[#d6ff6b] font-black text-[#08111f] hover:bg-[#e4ff9d]"><Users className="mr-2 h-4 w-4" /> {enqueue.isPending ? "Finding…" : "Find opponent"}</Button>}
+        </div>
+        {queueStatus.data?.status === "queued" && <div className="mt-5 flex items-center gap-3 rounded-2xl border border-[#d6ff6b]/20 bg-[#d6ff6b]/5 p-4 text-sm text-[#e4ff9d]" role="status"><Clock3 className="h-5 w-5" /> Searching for a compatible player…</div>}
+        {enqueue.data?.roomId && <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-200" role="status">Match found. Room <span className="font-mono">{enqueue.data.roomId}</span> is ready for the next room-control phase.</div>}
+        {(enqueue.error || cancelQueue.error || queueStatus.error) && <p className="mt-4 text-sm font-bold text-rose-300">{enqueue.error?.message || cancelQueue.error?.message || queueStatus.error?.message}</p>}
       </section>
     </div>
   );

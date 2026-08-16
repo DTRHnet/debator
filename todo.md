@@ -72,3 +72,25 @@ Scope note: this phase establishes identity and contracts only; realtime rooms a
 - [x] Add shared multiplayer room snapshot, state, command, and event schemas for future realtime phases.
 - [x] Add config/profile loading and error states so the gated multiplayer page never shows a false disabled state while queries are unresolved.
 - [x] Add regression coverage for multiplayer configuration behavior across disabled, enabled, loading, and error states.
+
+## Multiplayer Phase 2 runtime implementation
+
+- [x] Add persistent matchmaking queue and room tables with additive migration.
+- [x] Implement server-authoritative queue join/leave and deterministic two-player matching helpers.
+- [x] Implement room lifecycle state transitions, host controls, idempotency, and reconnect-safe snapshots.
+- [x] Add protected tRPC procedures for queue and room controls behind the multiplayer flag.
+- [x] Build gated queue and room-control UI while preserving solo gameplay.
+- [x] Add regression tests for queue matching, room transitions, authorization, and idempotency.
+- [ ] Run migration review, tests, type check, production build, checkpoint, and push to `multiplayer`.
+
+- [x] Implement host authorization and stronger server-authoritative room lifecycle controls with durable snapshot/event replay.
+- [x] Fix room transcript editing so players can type before submit, then verify the room UI.
+- [x] Add router-level authorization, feature-flag, and duplicate-submission regression tests.
+
+- [x] Add durable room replay/recovery coverage and complete authoritative lifecycle handling beyond basic event fetches.
+- [x] Verify the room UI after the transcript-editing fix at the rendered route.
+- [x] Add router-level duplicate-submission idempotency and disabled-runtime feature-flag tests.
+
+- [x] Integrate durable event reconciliation into the actual room load path and test restart recovery behavior.
+- [x] Add a router-path duplicate submit test using the same idempotency key and verify no second state advance.
+- [x] Keep room UI verification explicit about the feature-flagged disabled state until an enabled test fixture is available.
