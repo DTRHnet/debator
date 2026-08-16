@@ -188,9 +188,9 @@ The roadmap intentionally separates planning from implementation: the first bran
 
 - [x] Branch `multiplayer` created from the stable baseline.
 - [x] Roadmap saved as `docs/multiplayer-roadmap.md`.
-- [ ] Documentation commit created.
-- [ ] Branch pushed to `DTRHnet/debator`.
-- [ ] Remote branch and commit verified.
+- [x] Documentation commit created.
+- [x] Branch pushed to `DTRHnet/debator`.
+- [x] Remote branch and commit verified.
 
 ## Implementation guardrails
 
@@ -219,7 +219,7 @@ The user approved this roadmap as-is in Plan Mode. Execution begins with this do
 
 - Branch: `multiplayer`
 - File: `docs/multiplayer-roadmap.md`
-- Commit: pending
-- Remote push: pending
+- Commit: `5bd390c8ed44af9345d4375f5f3a79ba2c1aa867`
+- Remote push: `https://github.com/DTRHnet/debator/tree/multiplayer`
 
 ## End of roadmap

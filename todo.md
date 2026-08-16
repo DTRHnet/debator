@@ -35,7 +35,7 @@
 - [x] Add direct regression coverage for the Pro-to-Con playback transition and legacy offline payload normalization before judging.
 
 - [x] Create the `multiplayer` branch and add the detailed multiplayer architecture roadmap under `docs/`.
-- [ ] Push the new `multiplayer` branch to `DTRHnet/debator` and document the resulting commit.
+- [x] Push the new `multiplayer` branch to `DTRHnet/debator` and document the resulting commit.
 - [x] Preserve the current solo DebateRush behavior while planning multiplayer as an additive feature flag.
 
 ## Multiplayer plan history
