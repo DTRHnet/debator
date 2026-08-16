@@ -219,7 +219,7 @@ The user approved this roadmap as-is in Plan Mode. Execution begins with this do
 
 - Branch: `multiplayer`
 - File: `docs/multiplayer-roadmap.md`
-- Commit: `5bd390c8ed44af9345d4375f5f3a79ba2c1aa867`
+- Commit: `f000a3f4687c3cb9dcb96d2d984b6791f5233391`
 - Remote push: `https://github.com/DTRHnet/debator/tree/multiplayer`
 
 ## End of roadmap
